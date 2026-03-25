@@ -1,6 +1,5 @@
 # SISTEMA-RESERVAS-MYSQL
 ejercicio completo de sistema reserva con mysql listo para conectar a spring bot
-📘 Agenda de Contactos / Sistema de Préstamos
 🧠 Cambio de enfoque: de memoria a base de datos
 
 Al integrar una base de datos (MySQL), cambia completamente la lógica del sistema:
