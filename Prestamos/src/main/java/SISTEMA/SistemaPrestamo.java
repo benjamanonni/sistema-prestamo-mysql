@@ -469,7 +469,7 @@ public class SistemaPrestamo {
         String legajo = prestamo.getLegajoUsuario();
         //se bloquea desde el dia de la sancion mas los dias de atraso
         LocalDateTime fechaFinBloqueo = ahora.plusDays(diasAtraso);
-        Sancion sancion=new Sancion(prestamo.getId(),legajo,diasAtraso,fechaFinBloqueo,fechaFinBloqueo);
+        Sancion sancion=new Sancion(prestamo.getId(),legajo,diasAtraso,fechaInicioBloqueo,fechaFinBloqueo);
         //aplicamos sancion a usuario
         sancionDAO.bloquearUsuario(legajo, fechaFinBloqueo);
         //generamos sancion
