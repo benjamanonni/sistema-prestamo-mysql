@@ -1,218 +1,95 @@
-# SISTEMA-RESERVAS-MYSQL
-ejercicio completo de sistema reserva con mysql listo para conectar a spring bot
-🧠 Cambio de enfoque: de memoria a base de datos
+# Sistema de préstamos con MySQL
 
-Al integrar una base de datos (MySQL), cambia completamente la lógica del sistema:
+Segunda versión de un sistema de gestión de préstamos desarrollada en Java, incorporando persistencia relacional con MySQL, DAOs y una organización por capas más cercana a una aplicación real.
 
-La fuente de verdad pasa a ser la base de datos
-Las estructuras en memoria (como HashMap) dejan de ser necesarias
-Los datos en memoria se usan solo temporalmente
-🗑️ Eliminación de UsuariosService
+## Descripción
 
-Antes:
+Este proyecto representa la segunda etapa en la evolución de un sistema de préstamos.
 
-UsuariosService manejaba validaciones y almacenamiento
+En la primera versión, el foco estuvo en el modelado del dominio y la lógica de negocio utilizando estructuras en memoria.  
+En esta segunda versión, la fuente de verdad pasa a ser la base de datos, lo que obliga a reorganizar el sistema para trabajar con persistencia relacional, DAOs y consultas SQL.
 
-Ahora:
+La aplicación gestiona usuarios, recursos, préstamos y sanciones, aplicando reglas de negocio sobre préstamos activos, vencimientos, devoluciones y bloqueos.
 
-Se elimina porque:
-Ya no usamos estructuras en memoria
-Las validaciones se trasladan a SistemaPrestamo
-El DAO es quien interactúa con la base de datos
+## Funcionalidades
 
-👉 Nueva responsabilidad:
+- Registrar usuarios
+- Registrar recursos
+- Registrar préstamos
+- Consultar usuarios y recursos
+- Listar préstamos
+- Buscar préstamos por usuario, recurso o ID
+- Registrar devoluciones
+- Detectar préstamos vencidos
+- Aplicar sanciones por atraso
+- Consultar sanciones y usuarios bloqueados
+- Persistir información en MySQL
 
-SistemaPrestamo → UsuarioDAO
-🧩 DAO (Data Access Object)
+## Estructura del proyecto
 
-El DAO es el encargado de:
+- `DOMINIO`: entidades y tipos del sistema
+- `DATOS`: DAOs y acceso a datos
+- `CONEXION`: conexión a base de datos
+- `SISTEMA`: lógica general del sistema
+- `Main.java`: punto de entrada
+- `mysql.sql`: script de base de datos
+- `pom.xml`: configuración Maven
 
-Conectarse a la base de datos
-Ejecutar consultas
-Mapear datos entre Java y MySQL
-🔁 Uso de GET
+## Conceptos aplicados
 
-Aunque ya no usamos estructuras en memoria:
+- Programación orientada a objetos
+- Persistencia relacional con MySQL
+- JDBC
+- PreparedStatement y ResultSet
+- Organización por capas
+- Reconstrucción de objetos desde base de datos
+- Manejo de fechas con `LocalDateTime` y `Timestamp`
+- Inyección de dependencias por constructor
+- Separación entre lógica de negocio y acceso a datos
 
-Seguimos usando getters
-Pero ahora sirven para:
-Obtener atributos del objeto
-Enviar datos al DAO
+## Cambios respecto a la versión inicial
 
-Ejemplo:
+En esta versión se introducen cambios importantes respecto al sistema sin MySQL:
 
-usuario.getNombre();
-🔤 ENUM → STRING
+- La base de datos pasa a ser la fuente de verdad
+- Las estructuras en memoria dejan de ser el mecanismo principal de almacenamiento
+- El acceso a los datos se concentra en clases DAO
+- La lógica del sistema se reorganiza para trabajar con persistencia
+- Se utiliza Maven para estructurar mejor el proyecto y manejar dependencias
+- Se mejora la organización del código mediante carpetas separadas por responsabilidad
 
-MySQL no maneja enums como Java, por lo tanto:
+## Tecnologías utilizadas
 
-enumEstado.name()
+- Java
+- MySQL
+- JDBC
+- Maven
 
-👉 Convierte el enum a String para guardarlo en la base
+## Base de datos
 
-📅 Manejo de fechas
+El sistema utiliza MySQL para persistir usuarios, recursos, préstamos y sanciones.
 
-Se usa:
+Las consultas y actualizaciones se realizan mediante `PreparedStatement`, y los datos obtenidos se convierten nuevamente en objetos del dominio para que el sistema pueda seguir operando con lógica orientada a objetos.
 
-import java.sql.Timestamp;
+El archivo `mysql.sql` contiene la estructura inicial de la base de datos necesaria para ejecutar el proyecto.
 
-👉 Permite guardar fechas en formato DATETIME de MySQL
+## Objetivo del proyecto
 
-⚠️ Problema:
+Esta versión fue desarrollada para evolucionar un sistema inicialmente basado en memoria hacia un diseño con persistencia real, aplicando DAOs, conexión a base de datos y una estructura más escalable.
 
-Timestamp no maneja bien valores null
-Hay que validar antes de convertir
-❌ Error común: ID autogenerado en memoria
-static int id;
+## Evolución del proyecto
 
-👉 Esto está mal porque:
+Este repositorio forma parte de una evolución en tres etapas:
 
-La fuente de verdad es MySQL
-El ID debe venir de la base de datos (AUTO_INCREMENT)
-⚖️ Comparación de objetos (equals)
+1. **Sin MySQL:** modelado del dominio y lógica de negocio
+2. **Con MySQL:** persistencia relacional mediante JDBC
+3. **Con Spring:** reorganización del sistema usando framework
 
-❌ Incorrecto:
+## Posibles mejoras
 
-obj1.equals(obj2)
+- Externalizar configuración de conexión
+- Migrar a Spring con una arquitectura más robusta
 
-👉 Problema:
+## Estado
 
-Compara referencias en memoria
-
-✅ Correcto:
-
-Comparar por clave (ID)
-⚠️ Uso de set
-
-Antes (con estructuras en memoria):
-
-Tenía sentido usar set
-
-Ahora (con base de datos):
-
-No tiene sentido persistente
-Solo afecta al objeto en memoria temporal
-⚙️ Orden de validaciones
-
-Siempre:
-
-if (obj == null) → primero
-
-👉 Para evitar NullPointerException
-
-⚖️ Coherencia vs Rendimiento
-
-Problema:
-
-Muchas funciones consultan la base de datos
-
-Optimización:
-
-Pasar objetos ya obtenidos como parámetro
-Evitar consultas innecesarias
-
-Ejemplo:
-
-En devolución:
-Sabemos que solo cambia fechaDevolucion
-Podemos modificar el objeto en memoria con set
-
-👉 Trade-off:
-
-Mejor rendimiento
-Ligera pérdida de coherencia (controlada)
-🚫 Uso de System.out.println
-
-❌ Mala práctica
-
-✅ Mejor:
-
-throw new IllegalArgumentException("mensaje");
-🧠 Manejo de errores
-Tipo de error	Solución
-Parámetro inválido	IllegalArgumentException
-Regla de negocio	if
-Estado inválido (bloqueado, límite)	IllegalStateException
-Error técnico / BD	RuntimeException
-🚫 Bandera para listas vacías
-
-❌ Incorrecto:
-
-boolean vacio = true;
-
-✅ Correcto:
-
-lista.isEmpty()
-👤 Creación de Usuario
-
-Antes:
-
-SistemaPrestamo → valida → DAO
-
-Ahora:
-
-Validaciones en el constructor
-Código más limpio
-
-👉 Flujo final:
-
-SistemaPrestamo → UsuarioDAO
-💉 Inyección de dependencias
-
-❌ Mala práctica:
-
-private final UsuarioDAO usuarioDAO = new UsuarioDAO();
-
-👉 Problemas:
-
-Alto acoplamiento
-Difícil de testear
-
-✅ Correcto:
-
-Pasar el DAO por constructor
-public SistemaPrestamo(UsuarioDAO usuarioDAO) {
-    this.usuarioDAO = usuarioDAO;
-}
-🧪 Beneficio
-
-Ahora podés:
-
-Usar distintos DAO (ej: mock para testing)
-Testear más fácil
-
-👉 Idea clave:
-
-“No crees tus dependencias, recibilas”
-
-🏗️ Cambios estructurales
-1️⃣ Maven
-Permite escalabilidad
-Manejo de dependencias (MySQL)
-Proyecto portable
-2️⃣ Estructura de carpetas
-
-Separación clara:
-
-📂 datos
-📂 sistema
-📂 interfaz
-📂 dominio
-3️⃣ Constructores mejorados
-Se crean múltiples constructores en:
-Préstamos
-Sanciones
-
-👉 Beneficio:
-
-Validaciones centralizadas
-Mejor coherencia
-🧠 Idea final
-
-👉 Antes:
-
-Memoria como fuente de verdad
-
-👉 Ahora:
-
-Base de datos como fuente de verdad
+Proyecto funcional de práctica, conservado como segunda versión evolutiva del sistema.
